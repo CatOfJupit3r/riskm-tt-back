@@ -13,10 +13,18 @@
         /* Enable all strict type-checking options. */
         "skipLibCheck" : true,
         /* Skip type checking all .d.ts files. */
+
         "experimentalDecorators" : true,
         "emitDecoratorMetadata" : true,
         "strictPropertyInitialization" : false,
         "baseUrl" : "./src/",
-        "paths": {}
+        "paths": {
+            "@mocks/*": ["./mocks/*"],
+            "@services/*": ["./services/*"],
+            "@utils/*": ["./utils/*"],
+            "@schemas/*": ["./schemas/*"],
+            "@models/*": ["./models/*"],
+            "@controllers/*": ["./controllers/*"],
+        }
     },
 }
