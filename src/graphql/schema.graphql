@@ -1,0 +1,32 @@
+type Risk {
+    _id: ID!
+    name: String!
+    description: String!
+
+    category: Category!
+    resolved: Boolean!
+    createdBy: String!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Category {
+    _id: ID!
+    name: String!
+    description: String!
+
+    createdBy: String!
+    createdAt: String!
+    updatedAt: String!
+}
+
+type Query {
+    risks: [Risk!]
+    categories: [Category!]
+}
+
+type Mutation {
+    createRisk(name: String!, description: String!, categoryName: String!): Risk!
+    createCategory(name: String!, description: String!): Category!
+    resolveRisk(riskId: ID!): Risk!
+}

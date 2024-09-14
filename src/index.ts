@@ -1,3 +1,7 @@
-console.log('Hello, world!')
+import run from './startup'
 
-export const hello = 'Hello, world!'
+
+run().then(
+    () => console.log('Done'),
+    error => console.error('Failed to run:', error),
+)
