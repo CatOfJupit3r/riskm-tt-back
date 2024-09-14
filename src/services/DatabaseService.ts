@@ -4,6 +4,7 @@ import { RiskClass, RiskModel } from '@models/Risk'
 import { CategoryClass, CategoryModel } from '@models/Category'
 import testMocks from '@mocks/test.json'
 import prodMocks from '@mocks/prod.json'
+import { MONGO_URL } from '../configs'
 
 type SupportedDocumentTypes = DocumentType<RiskClass> | DocumentType<CategoryClass>
 
@@ -13,7 +14,7 @@ const UnixToDate = (unix: string): Date => {
 
 class DatabaseService {
     public connect = async (): Promise<void> => {
-        await mongoose.connect('mongodb://localhost:27017/prod')
+        await mongoose.connect(MONGO_URL)
     }
 
     private saveDocument = async (document: SupportedDocumentTypes) => {
@@ -22,6 +23,31 @@ class DatabaseService {
         })
     }
 
+    public getRisks = async () => {
+        return RiskModel.find()
+    }
+
+    public getCategories = async () => {
+        return CategoryModel.find()
+    }
+
+    public getCategoriesById = async (ids: readonly string[]): Promise<(CategoryClass | Error)[]> => {
+        const categories = await CategoryModel.find({ _id: { $in: ids } })
+        const categoryMap = new Map<string, CategoryClass>()
+        for (const category of categories) {
+            categoryMap.set(category._id.toString(), category)
+        }
+        return ids.map(id => categoryMap.get(id.toString()) || new Error(`Category with id ${id} not found`))
+    }
+
+    public getRisksById = async (ids: readonly string[]): Promise<(RiskClass | Error)[]> => {
+        const risks = await RiskModel.find({ _id: { $in: ids } })
+        const riskMap = new Map<string, RiskClass>()
+        for (const risk of risks) {
+            riskMap.set(risk._id.toString(), risk)
+        }
+        return ids.map(id => riskMap.get(id.toString()) || new Error(`Risk with id ${id} not found`))
+    }
 
     private addMocks = async (
         mocks:

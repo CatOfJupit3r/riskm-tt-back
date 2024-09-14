@@ -36,7 +36,10 @@
             ],
             "@controllers/*" : [
                 "./controllers/*"
-            ]
+            ],
+            "@graphql/*" : [
+                "./graphql/*"
+            ],
         }
     }
 }
