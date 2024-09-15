@@ -1,8 +1,6 @@
 import mongoose, { Types } from 'mongoose'
 import { RiskClass, RiskModel } from '@models/Risk'
 import { CategoryClass, CategoryModel } from '@models/Category'
-import testMocks from '@mocks/test.json'
-import prodMocks from '@mocks/prod.json'
 import { HYDRATION_MODE, MONGO_URL } from '../configs'
 import {
     CategoryDocumentFilters,
@@ -321,10 +319,12 @@ class DatabaseService {
     }
 
     public addTestMocks = async () => {
-        return this.addMocks(testMocks)
+        const mocks = await import ('@mocks/test.json')
+        return this.addMocks(mocks)
     }
 
     public addProdMocks = async () => {
+        const prodMocks = await import ('@mocks/prod.json')
         return this.addMocks(prodMocks)
     }
 }
