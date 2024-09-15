@@ -1,20 +1,53 @@
-import { DocumentType } from '@typegoose/typegoose'
 import mongoose, { Types } from 'mongoose'
 import { RiskClass, RiskModel } from '@models/Risk'
 import { CategoryClass, CategoryModel } from '@models/Category'
 import testMocks from '@mocks/test.json'
 import prodMocks from '@mocks/prod.json'
-import { MONGO_URL } from '../configs'
-
-type SupportedDocumentTypes = DocumentType<RiskClass> | DocumentType<CategoryClass>
+import { HYDRATION_MODE, MONGO_URL } from '../configs'
+import {
+    CategoryDocumentFilters,
+    CategoryDocumentType,
+    CategoryFilters,
+    PaginatedFilters,
+    RiskDocumentFilters,
+    RiskDocumentType,
+    RiskFilters,
+    SupportedDocumentTypes,
+} from '@models/DatabaseModels'
 
 const UnixToDate = (unix: string): Date => {
     return new Date(parseInt(unix))
 }
 
 class DatabaseService {
-    public connect = async (): Promise<void> => {
+    public init = async (): Promise<void> => {
         await mongoose.connect(MONGO_URL)
+        await this.hydrateDB()
+    }
+
+    private hydrateDB = async () => {
+        console.log('Hydrating database')
+        console.log('Hydration mode: ', HYDRATION_MODE)
+        switch (HYDRATION_MODE) {
+            case 'TEST':
+                await this.addTestMocks()
+                console.log('Test mocks added')
+                break
+            case 'PRODUCTION':
+                await this.addProdMocks()
+                console.log('Prod mocks added')
+                break
+            case 'DEVELOPMENT':
+                // if (await RiskModel.countDocuments() === 0 || await CategoryModel.countDocuments() === 0) {
+                //     console.log('No documents found in collection. Adding test mocks')
+                //     await this.addTestMocks()
+                //     console.log('Development mocks added')
+                // }
+                break
+            default:
+                console.log('Unknown hydration mode')
+                break
+        }
     }
 
     private saveDocument = async (document: SupportedDocumentTypes) => {
@@ -23,12 +56,63 @@ class DatabaseService {
         })
     }
 
-    public getRisks = async () => {
-        return RiskModel.find()
+    private buildRiskFilter = (filters: {
+        includeResolved?: boolean
+        nameFilter?: string
+        descriptionFilter?: string
+    }): RiskDocumentFilters => {
+        const filter: RiskDocumentFilters = {}
+        if (filters.includeResolved === false) {
+            filter.resolved = {
+                $eq: false,
+            }
+        }
+        if (filters.nameFilter) {
+            filter.name = { $regex: filters.nameFilter, $options: 'i' }
+        }
+        if (filters.descriptionFilter) {
+            filter.description = { $regex: filters.descriptionFilter, $options: 'i' }
+        }
+        return filter
     }
 
-    public getCategories = async () => {
-        return CategoryModel.find()
+    public getRisks = async (filters: RiskFilters & PaginatedFilters) => {
+        const filter = this.buildRiskFilter(filters)
+
+        return RiskModel.find(filter)
+            .skip(filters.offset || 0)
+            .limit(filters.limit || 250)
+    }
+
+    public countRisks = async (filters: RiskFilters) => {
+        const filter = this.buildRiskFilter(filters)
+        return RiskModel.countDocuments(filter)
+    }
+
+    private buildCategoryFilter = (filters: CategoryFilters): CategoryDocumentFilters => {
+        const filter: CategoryDocumentFilters = {}
+        if (filters.nameFilter) {
+            filter.name = { $regex: filters.nameFilter, $options: 'i' }
+        }
+        if (filters.descriptionFilter) {
+            filter.description = { $regex: filters.descriptionFilter, $options: 'i' }
+        }
+        return filter
+    }
+
+    public getCategories = async (
+        filters: CategoryFilters & PaginatedFilters,
+    ) => {
+        const filter = this.buildCategoryFilter(filters)
+
+        return CategoryModel.find(filter)
+            .skip(filters.offset || 0)
+            .limit(filters.limit || 250)
+    }
+
+    public countCategories = async (filters: CategoryFilters) => {
+        const filter = this.buildCategoryFilter(filters)
+        return CategoryModel.countDocuments(filter)
     }
 
     public getCategoriesById = async (ids: readonly string[]): Promise<(CategoryClass | Error)[]> => {
@@ -48,6 +132,126 @@ class DatabaseService {
         }
         return ids.map(id => riskMap.get(id.toString()) || new Error(`Risk with id ${id} not found`))
     }
+
+    public createRisk = async (
+        name: string,
+        description: string,
+        categoryId: string,
+        createdBy: string,
+    ): Promise<RiskDocumentType> => {
+        if (
+            !Types.ObjectId.isValid(categoryId) ||
+            !(await CategoryModel.findById(categoryId))
+        ) {
+            throw new Error('Invalid category id')
+        }
+        const risk = new RiskModel({
+            name,
+            description,
+            categoryId: new Types.ObjectId(categoryId),
+            createdBy,
+            resolved: false,
+            updatedAt: new Date(),
+            createdAt: new Date(),
+        })
+
+        await this.saveDocument(risk)
+        return risk
+    }
+
+    public removeRisk = async (
+        id: string,
+    ): Promise<RiskDocumentType | null> => {
+        return RiskModel.findByIdAndDelete(id)
+    }
+
+    public changeRiskStatus = async (
+        id: string,
+        resolved: boolean,
+    ): Promise<RiskDocumentType | null> => {
+        return RiskModel.findByIdAndUpdate(id, {
+            resolved,
+            updatedAt: new Date(),
+        }, { new: true })
+    }
+
+    public updateRisk = async (
+        id: string,
+        name: string,
+        description: string,
+        categoryId: string,
+    ): Promise<RiskDocumentType | null> => {
+        const changes: Record<string, string> = {}
+        if (name) {
+            changes['name'] = name
+        }
+        if (description) {
+            changes['description'] = description
+        }
+        if (categoryId) {
+            if (
+                !Types.ObjectId.isValid(categoryId) ||
+                !(await CategoryModel
+                    .findById(categoryId))
+            ) {
+                throw new Error('Invalid category id')
+            }
+            changes['categoryId'] = categoryId
+        }
+        if (Object.keys(changes).length !== 0) {
+            return RiskModel.findByIdAndUpdate(id, {
+                ...changes,
+                updatedAt: new Date(),
+            }, { new: true })
+        }
+        return null
+    }
+
+    public createCategory = async (
+        name: string,
+        description: string,
+        createdBy: string,
+    ): Promise<CategoryDocumentType> => {
+        const category = new CategoryModel({
+            name,
+            description,
+            createdBy,
+            updatedAt: new Date(),
+            createdAt: new Date(),
+        })
+
+        await this.saveDocument(category)
+        return category
+    }
+
+    public removeCategory = async (
+        id: string,
+    ): Promise<CategoryDocumentType | null> => {
+        const removed = await CategoryModel.findByIdAndDelete(id)
+        if (removed === null) {
+            return null
+        }
+        await RiskModel.updateMany({ categoryId: removed._id }, { categoryId: null })
+        return removed
+    }
+
+    public updateCategory = async (
+        id: string,
+        name: string,
+        description: string,
+    ): Promise<CategoryDocumentType | null> => {
+        return CategoryModel.findByIdAndUpdate(id, {
+            name,
+            description,
+            updatedAt: new Date(),
+        }, { new: true })
+    }
+
+    /*
+
+    Hydration functions
+
+     */
 
     private addMocks = async (
         mocks:
@@ -74,11 +278,8 @@ class DatabaseService {
                 }[]
             },
     ) => {
-        // 1. clears the database
-        // 2. import `@mocks/test` and save each document
-        // 3. return the number of documents
-
-        // 1. clears the database
+        // 1. clears the database.
+        // can be commented out, but on multiple runs, it will create duplicates
         await RiskModel.deleteMany({})
         await CategoryModel.deleteMany({})
 

@@ -1,4 +1,4 @@
-import { ApolloServer } from 'apollo-server'
+import { ApolloServer, AuthenticationError } from 'apollo-server'
 import { loadSchemaSync } from '@graphql-tools/load'
 import { join } from 'node:path'
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
@@ -11,10 +11,16 @@ const typeDefs = loadSchemaSync(join(__dirname, 'schema.graphql'), {
     loaders: [new GraphQLFileLoader()],
 })
 const resolvers = merge({}, RiskResolvers, CategoryResolvers)
-console.log(resolvers)
 
 export const server = new ApolloServer({
     typeDefs,
     resolvers,
-    context: () => context,
+    context: ({ req }) => {
+        if (req.headers?.authorization) {
+            context.user.name = req.headers.authorization
+        } else {
+            throw new AuthenticationError('Unauthorized')
+        }
+        return context
+    },
 })

@@ -3,7 +3,7 @@ type Risk {
     name: String!
     description: String!
 
-    category: Category!
+    category: Category
     resolved: Boolean!
     createdBy: String!
     createdAt: String!
@@ -21,12 +21,52 @@ type Category {
 }
 
 type Query {
-    risks: [Risk!]
-    categories: [Category!]
+    risks(
+        includeResolved: Boolean,
+        nameFilter: String,
+        descriptionFilter: String,
+        limit: Int,
+        offset: Int
+    ): RiskPaginatedResult!
+
+    categories(
+        nameFilter: String,
+        descriptionFilter: String,
+        limit: Int,
+        offset: Int
+    ): CategoryPaginatedResult!
+}
+
+type RiskPaginatedResult {
+    filtered: [Risk!]!
+    count: Int!
+}
+
+type CategoryPaginatedResult {
+    filtered: [Category!]!
+    count: Int!
 }
 
 type Mutation {
-    createRisk(name: String!, description: String!, categoryName: String!): Risk!
-    createCategory(name: String!, description: String!): Category!
-    resolveRisk(riskId: ID!): Risk!
+    createRisk(
+        name: String!,
+        description: String!,
+        categoryId: ID!
+    ): Risk!
+    updateRisk(
+        _id: ID!,
+        name: String,
+        description: String,
+        categoryId: ID,
+    ): Risk
+    removeRisk(_id: ID!): Risk
+    changeRiskStatus(_id: ID!, resolved: Boolean!): Risk
+
+    createCategory(name: String!, description: String!): Category
+    removeCategory(_id: ID!): Category
+    updateCategory(
+        _id: ID!,
+        name: String,
+        description: String,
+    ): Category
 }

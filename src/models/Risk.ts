@@ -1,4 +1,4 @@
-import { getModelForClass, prop } from '@typegoose/typegoose'
+import { getModelForClass, prop, Severity } from '@typegoose/typegoose'
 import { Types } from 'mongoose'
 
 export class RiskClass {
@@ -8,8 +8,8 @@ export class RiskClass {
     @prop({ required: true })
     description: string
 
-    @prop({ required: true })
-    categoryId: Types.ObjectId
+    @prop({ required: true, allowMixed: Severity.ALLOW })
+    categoryId: Types.ObjectId | null
 
     @prop({ required: true })
     resolved: boolean
