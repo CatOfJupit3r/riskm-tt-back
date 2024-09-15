@@ -1,19 +1,17 @@
 import categoryLoader from '@graphql/loaders/categoryLoader'
 import riskLoader from '@graphql/loaders/riskLoader'
 
-export interface ContextType {
-    loaders: {
-        riskLoader: typeof riskLoader
-        categoryLoader: typeof categoryLoader
-    }
-}
 
-
-const context: ContextType = {
+const context = {
     loaders: {
         riskLoader,
         categoryLoader,
     },
+    user: {
+        name: null as string | null,
+    }
 }
+
+export type ContextType = typeof context
 
 export default context
