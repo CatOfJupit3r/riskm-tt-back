@@ -35,6 +35,9 @@ export const CategoryResolvers = {
             if (!args.description || args.description.length === 0) {
                 throw new Error('Category description is required')
             }
+            if (!user || !user.name) {
+                throw new Error('To create a category, you must be logged in!')
+            }
             let category: CategoryDocumentType
             try {
                 category = await DatabaseService.createCategory(

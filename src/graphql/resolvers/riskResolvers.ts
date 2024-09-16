@@ -56,6 +56,9 @@ export const RiskResolvers = {
             if (!args.categoryId || !(Types.ObjectId.isValid(args.categoryId))) {
                 throw BadRequest('Valid category id is required')
             }
+            if (!user || !user.name) {
+                throw BadRequest('To create a risk, you must be logged in!')
+            }
             const risk = await DatabaseService.createRisk(
                 args.name,
                 args.description,

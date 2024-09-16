@@ -16,11 +16,7 @@ export const server = new ApolloServer({
     typeDefs,
     resolvers,
     context: ({ req }) => {
-        if (req.headers?.authorization) {
-            context.user.name = req.headers.authorization
-        } else {
-            throw new AuthenticationError('Unauthorized')
-        }
+        context.user.name = req.headers.authorization ?? null
         return context
     },
 })
