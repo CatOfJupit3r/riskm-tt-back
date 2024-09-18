@@ -36,14 +36,13 @@ class DatabaseService {
                 console.log('Prod mocks added')
                 break
             case 'DEVELOPMENT':
-                // if (await RiskModel.countDocuments() === 0 || await CategoryModel.countDocuments() === 0) {
-                //     console.log('No documents found in collection. Adding test mocks')
-                //     await this.addTestMocks()
-                //     console.log('Development mocks added')
-                // }
+                if (await RiskModel.countDocuments() === 0 || await CategoryModel.countDocuments() === 0) {
+                    console.log('No documents found in collection. Adding development mocks')
+                    await this.addTestMocks()
+                    console.log('Development mocks added')
+                }
                 break
             default:
-                console.log('Unknown hydration mode')
                 break
         }
     }
