@@ -1,4 +1,4 @@
-import { ApolloServer, AuthenticationError } from 'apollo-server'
+import { ApolloServer } from 'apollo-server'
 import { loadSchemaSync } from '@graphql-tools/load'
 import { join } from 'node:path'
 import { GraphQLFileLoader } from '@graphql-tools/graphql-file-loader'
