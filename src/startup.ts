@@ -5,9 +5,7 @@ import { SERVER_HOST, SERVER_PORT } from './configs'
 const run = async () => {
     await DatabaseService.init()
 
-    const { url } = await server.listen({
-        path: `${SERVER_HOST}:${SERVER_PORT}`,
-    })
+    const { url } = await server.listen(SERVER_PORT, SERVER_HOST)
     console.log(`Server ready at ${url}`)
 }
 
