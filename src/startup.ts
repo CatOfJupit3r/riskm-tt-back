@@ -6,7 +6,7 @@ const run = async () => {
     await DatabaseService.init()
 
     const { url } = await server.listen({
-        url: `${SERVER_HOST}:${SERVER_PORT}`,
+        path: `${SERVER_HOST}:${SERVER_PORT}`,
     })
     console.log(`Server ready at ${url}`)
 }
