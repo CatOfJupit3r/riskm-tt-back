@@ -19,7 +19,9 @@ const UnixToDate = (unix: string): Date => {
 
 class DatabaseService {
     public init = async (): Promise<void> => {
+        console.log("Connecting to database. URL: ", MONGO_URL)
         await mongoose.connect(MONGO_URL)
+        console.log("Connected to database")
         await this.hydrateDB()
     }
 
