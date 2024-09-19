@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "scripts": {
         "test": "test",
-        "start": "ts-node src/index.ts",
+        "start": "node -r ts-node/register --max-old-space-size=512 src/index.ts",
         "dev": "nodemon src/index.ts",
         "pretty": "prettier --write .",
         "lint": "eslint . --fix"
