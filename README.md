@@ -25,6 +25,7 @@ The following environment variables are required for the application to run:
 
 ```dotenv
 MONGO_URL= # URL of the MongoDB database
+SERVER_HOST= # Host on which the server will run
 SERVER_PORT= # Port on which the server will run
 HYDRATION_TYPE= # 'TEST' OR 'DEVELOPMENT' OR 'PRODUCTION'
 NODE_ENV= # 'test' OR 'development' OR 'production'. if set to 'test' or 'development', then GraphQL will omit stacktrace in error response

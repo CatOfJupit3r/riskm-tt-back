@@ -1,12 +1,12 @@
 import DatabaseService from '@services/DatabaseService'
 import { server } from '@graphql/apollo'
-import { SERVER_PORT } from './configs'
+import { SERVER_HOST, SERVER_PORT } from './configs'
 
 const run = async () => {
     await DatabaseService.init()
 
     const { url } = await server.listen({
-        port: SERVER_PORT,
+        url: `${SERVER_HOST}:${SERVER_PORT}`,
     })
     console.log(`Server ready at ${url}`)
 }
